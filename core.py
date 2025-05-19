@@ -197,6 +197,7 @@ class Gantt:
         self.df["end_date"] = self.df["end_date"] + timedelta(days=1)
 
 
+
         fig = px.timeline(
             self.df,
             x_start='start_date',
@@ -208,20 +209,35 @@ class Gantt:
             hover_data=['assignee', 'status', 'critical_rank', 'project']
         )
 
-        """
+        
         for deadline in self.deadlines:
             
-            fig.add_vline(
-                x=date(2025, 5, 7),
-                line_width=2,
-                line_dash="dash",
-                line_color="red",
-                annotation_text=deadline.deadline_name,
-                annotation_position="top right",
-                annotation_font_size=12,
-                annotation_font_color="red"
+            fig.add_shape(
+                type="line",
+                x0=pd.to_datetime(deadline.deadline_date),
+                x1=pd.to_datetime(deadline.deadline_date),
+                y0=0,
+                y1=1,
+                yref='paper',  # makes y span entire plot height
+                line=dict(color="red", width=2, dash="dash")
             )
-        """
+
+            fig.add_annotation(
+                x=pd.to_datetime(deadline.deadline_date),  # same x as line
+                y=1,  # top of the plot area
+                yref='paper',
+                text=f"{deadline.deadline_date}, {deadline.deadline_name}",  # label text
+                showarrow=False,
+                xanchor='left',  # controls horizontal alignment relative to x
+                yanchor='bottom',  # controls vertical alignment relative to y
+                font=dict(color="red", size=12),
+                bgcolor='rgba(255,255,255,0.7)',  # optional: white background with some transparency
+                bordercolor='red',
+                borderwidth=1,
+                borderpad=2,
+                opacity=0.9,
+            )
+        
         fig.update_yaxes(autorange="reversed")  # tasks from top to bottom
         fig.update_layout(legend_title_text=self.color_col.capitalize())
         fig.show()

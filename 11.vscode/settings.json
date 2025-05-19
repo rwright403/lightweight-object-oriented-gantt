@@ -1,0 +1,34 @@
+{
+  // Optional: recommend a consistent theme
+  "workbench.colorTheme": "GitHub Dark Default",
+
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+      {
+        // Color for named keyword arguments in function/class calls
+        "scope": [
+          "variable.parameter",
+          "meta.function-call.arguments.python",
+          "variable.parameter.function.python"
+        ],
+        "settings": {
+          "foreground": "#3b6deb",  // Bright pink
+          "fontStyle": "italic"
+        }
+      },
+      {
+        // Color for ALL variable names (e.g., x = ..., task = ...)
+        "scope": [
+          "variable.other.readwrite",
+          "meta.definition.variable.name",
+          "meta.assignment.variable.python",
+          "meta.variable.assignment"
+        ],
+        "settings": {
+          "foreground": "#8be9fd",  // Cyan-like blue
+          "fontStyle": "bold"
+        }
+      }
+    ]
+  }
+}

@@ -1,7 +1,6 @@
 # lightweight-object-oriented-gantt
 
-very simple not much here - based on plotly + pandas
-This program is a lightweight object oriented gantt chart:
+very simple not much here - this program is a lightweight object oriented gantt chart based on plotly + pandas.
 
 The GUI is vscode and the gantt chart versions are tracked through github.
 - This was chosen for agility of both programming and for the user to use.
@@ -12,6 +11,21 @@ There are three files:
 - core.py --> contains all objects - abstractions the user of the program does not need to interact with (don't change)
 - task_list.py --> is the input file for the user to enter the tasks (add tasks here)
 - main.py --> this is the file that will ask for additional user input and create the gantt chart (run this file)
+
+## Creating Deadlines:
+The deadlines are added to the "deadlines" list in task_list.py
+
+copy the following template into the deadlines list and replace the <> with text:
+
+>    Deadline(
+>        deadline_name="<str>",
+>        deadline_date=date( <input year int>, <input month int>, <input day,),
+>    ),
+
+where:
+- deadline_name: is the name of the deadline.
+- deadline_date in (YYYY/MM/DD)
+
 
 ## Creating Tasks:
 The tasks are added to the "tasks" list in task_list.py
