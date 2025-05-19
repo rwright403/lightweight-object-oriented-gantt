@@ -20,7 +20,9 @@ When you run main.py, the program will prompt you with a few different ways to c
 >3 --> Color by completion status where red means unstarted, yellow means working on and green means complete
 >4 --> Color by critical_rank where the most critical rank is red
 >5 --> Select a task with dependencies and color all task dependencies red and the task with dependencies blue
->Enter a number to select how to color the gantt chart: 
+>Enter a number to select how to color the gantt chart:
+
+Mode 5 will prompt you to enter a string corresponding to a task_name and let you know if the task_name does not exist in the list. You don't need to enter the string in snake case because the program will convert it for you.
 
 Once the number is selected, the program will start a local web server and automatically open the gantt chart in your browser with plotly. This lets you interact with the full app in your browser without needing an internet connection or deploying it online. This provides a lot of interactive features like zooming in and data when hovering over tasks.
 
