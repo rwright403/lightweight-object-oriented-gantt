@@ -21,11 +21,12 @@ for fields with multiple <> below, they are interpreted by the program as lists,
 
 >        Task(
 >            task_name="<str>",
+>            project="str",
+>
 >            start_date=date( <input year int>, <input month int>, <input day int>),
 >            end_date=date( <input year int>, <input month int>, <input day int>),
 >            status=<int>,  
 >            critical_rank=<int>,                                      #can also set critical_rank to None, or add more fields if desired
->            project="str",
 >            assignee="str",
 >            dependencies="<str> ","<str>"                             #can also set critical_rank to None, or add more fields if desired
 >        ),
