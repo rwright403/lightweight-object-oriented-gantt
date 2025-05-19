@@ -1,5 +1,6 @@
 # lightweight-object-oriented-gantt
 
+very simple not much here - based on plotly + pandas
 This program is a lightweight object oriented gantt chart:
 
 The GUI is vscode and the gantt chart versions are tracked through github.
@@ -39,6 +40,8 @@ You will need the following:
 
 once you have all 3 softwares:
 1) use github desktop to "clone" this repository
-2) download all the required python libraries
+2) download all the required python libraries with the following command in terminal:
+> pip install -r requirements.txt
+Note: make sure you have pip installed
 
 # Documentation:
