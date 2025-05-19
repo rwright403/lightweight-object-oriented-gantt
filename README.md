@@ -19,6 +19,9 @@ The tasks are added to the "tasks" list in task_list.py
 copy the following template into the tasks list and replace the <> with text.
 for fields with multiple <> below, they are interpreted by the program as lists, which can have a single entry as required. For multiple entries make sure to split them with commas
 
+Note: for consistency, every string is converted to: snake_case
+This means that the input project strings: "Make   me  a COFFEE" and "make me a coffee" will both be sorted under the project "make_me_a_coffee"
+
 >        Task(
 >            task_name="<str>",
 >            project="str",
@@ -32,10 +35,21 @@ for fields with multiple <> below, they are interpreted by the program as lists,
 >        ),
 
 
+where:
+- task_name: is the name of the task. Each task must have a unique name
+- project: Every task belongs to a project ex: "mixing ingredients" is a task of the "cake baking" project
+- start date in (YYYY/MM/DD)
+- end date in (YYYY/MM/DD)
+- status is an int where 0 = not started, 1 = started but not complete, 2 = complete
+- critical rank **is a string (in double quotes)** arbitrarily set by the user to rank which tasks are most pressing. Can be left blank for non critical tasks
+- assignee is the person working on the task
+- dependencies are an optional list of all the tasks that must be completed before the the task they are in.
+
+
 ## Setup:
 
 You will need the following:
-- python 
+- python - make sure to check the "add to path option"
 - vscode
 - github desktop
 
@@ -44,5 +58,3 @@ once you have all 3 softwares:
 2) download all the required python libraries with the following command in terminal:
 > pip install -r requirements.txt
 Note: make sure you have pip installed
-
-# Documentation:

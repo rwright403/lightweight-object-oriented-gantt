@@ -1,33 +1,41 @@
 import pandas as pd
 import plotly.express as px
 import strcase
-from datetime import date
+import re
+from datetime import date, timedelta
 from typing import Optional
+
+class Deadline:
+    def __init__(self, deadline_name: str, deadline_date: date):
+        self.deadline_name = deadline_name
+        self.deadline_date = deadline_date
 
 class Task:
     def __init__(
             self, 
+            project: str,
             task_name: str, 
+
             start_date: date, 
             end_date: date, 
             status: int, 
             critical_rank: Optional[int], 
-            project: str,
             assignee: str,
             dependencies: Optional[list[str]] = None
             ):
         
-        self.task_name = strcase.to_snake(task_name.strip())
+        self.project = strcase.to_snake(re.sub(r'\s+', ' ', project).strip().lower())
+        self.task_name = strcase.to_snake(re.sub(r'\s+', ' ', task_name).strip().lower())
+
         self.start_date = start_date
         self.end_date = end_date
         self.status = status  # 0=TODO, 1=Started, 2=Complete
         self.critical_rank = critical_rank
-        self.project = strcase.to_snake(project.strip())
-        self.assignee = strcase.to_snake(assignee.strip())
+        self.assignee = strcase.to_snake(re.sub(r'\s+', ' ', assignee).strip().lower())
         
         self.dependencies = []
         if dependencies is not None: 
-            for str in dependencies: self.dependencies.append(strcase.to_snake(str.strip()))
+            for str in dependencies: self.dependencies.append(strcase.to_snake(re.sub(r'\s+', ' ', str).strip().lower()))
         
         self.check_dates()
         self.check_status()
@@ -54,15 +62,15 @@ class Task:
 
 
 
-import pandas as pd
-import plotly.express as px
-
 class Gantt:
-    def __init__(self, tasks):
+    def __init__(self, tasks, deadlines):
         # tasks is a list of Task objects
         self.df = self._tasks_to_df(tasks)
-        self.color_mode = None  # e.g. 'project', 'assignee', 'critical_rank', 'status'
-        self.date_range = None  # tuple (start_date, end_date)
+        self.deadlines = deadlines
+
+        self.color_map = None
+        self.color_col = None
+        self.title_str = None
 
     def _tasks_to_df(self, tasks):
         # Convert list of Task objects into pandas DataFrame
@@ -80,60 +88,140 @@ class Gantt:
             })
         df = pd.DataFrame(data)
         return df
+    
+    def project_color_map(self):
+        unique_vals = self.df['project'].unique()
+        colors = px.colors.qualitative.Alphabet  #NOTE: 26 default colors
+        self.color_map = {val: colors[i % len(colors)] for i, val in enumerate(unique_vals)}
+        self.color_col = 'project'
+        self.title_str = "Gantt colored based on project"
 
-    def filter_date_range(self, start_date, end_date):
-        self.date_range = (start_date, end_date)
-        self.df = self.df[
-            (self.df['start_date'] <= end_date) &
-            (self.df['end_date'] >= start_date)
-        ]
 
-    def filter_critical_tasks(self, top_n=3):
-        # Keep only tasks with critical rank 1 to top_n
-        self.df = self.df[self.df['critical_rank'].notnull()]
-        self.df = self.df[self.df['critical_rank'] <= top_n]
+    def assignee_color_map(self):
+        unique_vals = self.df['assignee'].unique()
+        colors = px.colors.qualitative.Alphabet  #NOTE: 26 default colors
+        self.color_map = {val: colors[i % len(colors)] for i, val in enumerate(unique_vals)}
+        self.color_col = 'assignee'
+        self.title_str = "Gantt colored based on assignee"
 
-    def set_color_mode(self, mode):
-        # mode in ['project', 'assignee', 'critical_rank', 'status']
-        self.color_mode = mode
 
-    def _get_color_discrete_map(self):
-        # Map each category to a color for plotly
-        unique_vals = self.df[self.color_mode].unique()
-        colors = px.colors.qualitative.Plotly  # default qualitative colors
-        color_map = {val: colors[i % len(colors)] for i, val in enumerate(unique_vals)}
-        return color_map
+    def status_map(self):
+        # Base project color map
+        unique_projects = self.df['project'].unique()
+        base_colors = px.colors.qualitative.Alphabet
+        self.color_map = {project: base_colors[i % len(base_colors)] for i, project in enumerate(unique_projects)}
 
-    def highlight_dependencies(self, base_color_map):
-        # Color all dependencies red in addition to base coloring
+        # Status-based override colors
+        status_colors = {
+            0: 'red',     # Unstarted
+            1: 'yellow',  # Started
+            2: 'green'    # Complete
+        }
+
+        # Override colors for each task based on its status
+        for _, row in self.df.iterrows():
+            project = row['project']
+            status = row['status']
+            if status in status_colors:
+                self.color_map[project] = status_colors[status]  # override project color
+
+        self.color_col = 'project'
+        self.title_str = "Gantt colored by project, overridden by status"
+
+
+    def critical_rank_map(self):
+        # Base project colors
+        unique_projects = self.df['project'].unique()
+        base_colors = px.colors.qualitative.Light24
+        self.color_map = {project: base_colors[i % len(base_colors)] for i, project in enumerate(unique_projects)}
+
+        # Loop over rows to assign colors per task
+        for _, row in self.df.iterrows():
+            project = row['project']
+            critical_rank = row['critical_rank']
+
+            if critical_rank == "1":
+                self.color_map[critical_rank] = 'red'   # override critical tasks with red
+
+
+        self.color_col = 'critical_rank'  # Color by task to apply per-task colors
+        self.title_str = "Gantt colored by critical path"
+
+
+        """
+    def dependencies_map(self):
+        task_with_dependencies = input("Enter a task with dependencies: ")
+
+
+        # Base colors for projects
+        unique_projects = self.df['project'].unique()
+        base_colors = px.colors.qualitative.Pastel1 + px.colors.qualitative.Pastel2
+        project_color_map = {proj: base_colors[i % len(base_colors)] for i, proj in enumerate(unique_projects)}
+
+        # Initialize color_map keyed by task ID (assumes 'task' column uniquely identifies tasks)
+        self.color_map = {}
+
+        # Collect all dependency tasks in a set
         dep_tasks = set()
-        for deps in self.df['dependencies']:
-            if deps:
-                dep_tasks.update(deps)
-        # We'll override the color_map here:
-        color_map = base_color_map.copy()
-        for task in dep_tasks:
-            color_map[task] = 'red'
-        return color_map
+        
+        # If you want to get dependencies only for a specific task
+        if task_with_dependencies is not None:
+            deps = self.df.loc[self.df['task'] == task_with_dependencies, 'dependencies'].values
+            if len(deps) > 0 and deps[0]:
+                dep_tasks.update(deps[0])  # Assuming dependencies is a list of task IDs
+        else:
+            # If you want to mark **all dependencies** red (from all tasks)
+            for deps in self.df['dependencies']:
+                if deps:
+                    dep_tasks.update(deps)
+
+        # Assign colors per task, override dependencies with red
+        for _, row in self.df.iterrows():
+            task = row['dependencies']
+            project = row['project']
+
+            if task in dep_tasks:
+                self.color_map[task] = 'red'  # Dependency tasks in red
+            else:
+                self.color_map[task] = project_color_map[project]
+
+        self.color_col = 'task'  # Color by task to apply per-task colors
+        self.title_str = "Gantt colored based on dependencies"
+            """
+
+        
+
 
     def plot(self):
-        if self.color_mode is None:
-            color_col = 'project'
-        else:
-            color_col = self.color_mode
+        # Need to add one to the end day for the task to appear as if it finishes on the end day
+        self.df["end_date"] = self.df["end_date"] + timedelta(days=1)
 
-        color_map = self._get_color_discrete_map()
-        color_map = self.highlight_dependencies(color_map)
 
         fig = px.timeline(
             self.df,
             x_start='start_date',
             x_end='end_date',
             y='task_name',
-            color=color_col,
-            color_discrete_map=color_map,
+            title=self.title_str,
+            color=self.color_col,
+            color_discrete_map=self.color_map,
             hover_data=['assignee', 'status', 'critical_rank', 'project']
         )
-        fig.update_yaxes(autorange="reversed")  # tasks from top to bottom
 
+        """
+        for deadline in self.deadlines:
+            
+            fig.add_vline(
+                x=date(2025, 5, 7),
+                line_width=2,
+                line_dash="dash",
+                line_color="red",
+                annotation_text=deadline.deadline_name,
+                annotation_position="top right",
+                annotation_font_size=12,
+                annotation_font_color="red"
+            )
+        """
+        fig.update_yaxes(autorange="reversed")  # tasks from top to bottom
+        fig.update_layout(legend_title_text=self.color_col.capitalize())
         fig.show()
