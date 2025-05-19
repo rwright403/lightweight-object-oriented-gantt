@@ -72,6 +72,7 @@ class Gantt:
         self.color_col = None
         self.title_str = None
 
+
     def _tasks_to_df(self, tasks):
         # Convert list of Task objects into pandas DataFrame
         data = []
@@ -89,6 +90,7 @@ class Gantt:
         df = pd.DataFrame(data)
         return df
     
+
     def project_color_map(self):
         unique_vals = self.df['project'].unique()
         colors = px.colors.qualitative.Alphabet  #NOTE: 26 default colors
@@ -148,15 +150,20 @@ class Gantt:
         self.title_str = "Gantt colored by critical path"
 
 
-        """
     def dependencies_map(self):
-        task_with_dependencies = input("Enter a task with dependencies: ")
+        # Repeatedly prompt the user until they enter a valid task
+        while True:
+            task_with_dependencies = input("Enter a task with dependencies: ")
+            task_with_dependencies = strcase.to_snake(re.sub(r'\s+', ' ', task_with_dependencies).strip().lower())
 
+            if task_with_dependencies in self.df['task_name'].values:
+                break
+            else:
+                print(f"Task '{task_with_dependencies}' not found. Please try again.")
 
         # Base colors for projects
-        unique_projects = self.df['project'].unique()
-        base_colors = px.colors.qualitative.Pastel1 + px.colors.qualitative.Pastel2
-        project_color_map = {proj: base_colors[i % len(base_colors)] for i, proj in enumerate(unique_projects)}
+        unique_projects = self.df['task_name'].unique()
+        project_color_map = {proj: '#808080'  for i, proj in enumerate(unique_projects)}
 
         # Initialize color_map keyed by task ID (assumes 'task' column uniquely identifies tasks)
         self.color_map = {}
@@ -164,39 +171,28 @@ class Gantt:
         # Collect all dependency tasks in a set
         dep_tasks = set()
         
-        # If you want to get dependencies only for a specific task
-        if task_with_dependencies is not None:
-            deps = self.df.loc[self.df['task'] == task_with_dependencies, 'dependencies'].values
-            if len(deps) > 0 and deps[0]:
-                dep_tasks.update(deps[0])  # Assuming dependencies is a list of task IDs
-        else:
-            # If you want to mark **all dependencies** red (from all tasks)
-            for deps in self.df['dependencies']:
-                if deps:
-                    dep_tasks.update(deps)
-
-        # Assign colors per task, override dependencies with red
+        # Assign default color per project to all tasks
         for _, row in self.df.iterrows():
-            task = row['dependencies']
-            project = row['project']
+            self.color_map[row['task_name']] = project_color_map.get(row['project'], 'gray')
 
-            if task in dep_tasks:
-                self.color_map[task] = 'red'  # Dependency tasks in red
-            else:
-                self.color_map[task] = project_color_map[project]
+        # Find the target task row
+        task_row = self.df[self.df['task_name'] == task_with_dependencies]
+        self.color_map[task_with_dependencies] = 'blue'  # Override task color
 
-        self.color_col = 'task'  # Color by task to apply per-task colors
-        self.title_str = "Gantt colored based on dependencies"
-            """
+        if not task_row.empty:
+            dependencies = task_row.iloc[0]['dependencies']
+            if dependencies:
+                for dep_task in dependencies:
+                    if dep_task in self.df['task_name'].values:
+                        self.color_map[dep_task] = 'red'  # Override dependent task color
 
-        
+        self.color_col = 'task_name'  # Color by task to apply per-task colors
+        self.title_str = "Gantt colored based on dependencies"  
 
 
     def plot(self):
-        # Need to add one to the end day for the task to appear as if it finishes on the end day
-        self.df["end_date"] = self.df["end_date"] + timedelta(days=1)
-
-
+        ### create figure
+        self.df["end_date"] = self.df["end_date"] + timedelta(days=1) # Need to add one to the end day for the task to appear as if it finishes on the end day
 
         fig = px.timeline(
             self.df,
@@ -209,7 +205,7 @@ class Gantt:
             hover_data=['assignee', 'status', 'critical_rank', 'project']
         )
 
-        
+        ### plot deadlines
         for deadline in self.deadlines:
             
             fig.add_shape(

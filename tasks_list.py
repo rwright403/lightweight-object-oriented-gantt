@@ -45,7 +45,7 @@ tasks = [
         dependencies=["mixing_ingredients"]
     ),
     Task(
-        project="baking_cake",
+        project="eating_cake",
         task_name="eating_cake",
 
         start_date=date(2025, 5, 8),
@@ -53,7 +53,7 @@ tasks = [
         status=0,
         critical_rank="2",
         assignee="ryan",
-        dependencies=["baking_cake"]
+        dependencies=None
     ),
 
         Task(

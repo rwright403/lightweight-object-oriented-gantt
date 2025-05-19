@@ -1,5 +1,7 @@
 # lightweight-object-oriented-gantt
 
+![Project Gantt](images/lightweight-oo-gantt.png)
+
 very simple not much here - this program is a lightweight object oriented gantt chart based on plotly + pandas.
 
 The GUI is vscode and the gantt chart versions are tracked through github.
@@ -12,17 +14,31 @@ There are three files:
 - task_list.py --> is the input file for the user to enter the tasks (add tasks here)
 - main.py --> this is the file that will ask for additional user input and create the gantt chart (run this file)
 
+When you run main.py, the program will prompt you with a few different ways to color the graph:
+>1 --> Color by project
+>2 --> Color by assignee
+>3 --> Color by completion status where red means unstarted, yellow means working on and green means complete
+>4 --> Color by critical_rank where the most critical rank is red
+>5 --> Select a task with dependencies and color all task dependencies red and the task with dependencies blue
+>Enter a number to select how to color the gantt chart: 
+
+Once the number is selected, the program will start a local web server and automatically open the gantt chart in your browser with plotly. This lets you interact with the full app in your browser without needing an internet connection or deploying it online. This provides a lot of interactive features like zooming in and data when hovering over tasks.
+
+For entering deadlines and tasks in tasks_list.py, ctrl+F and vscode are intended to be used as the GUI.
+
 ## Creating Deadlines:
 The deadlines are added to the "deadlines" list in task_list.py
 
 copy the following template into the deadlines list and replace the <> with text:
 
->    Deadline(
->        deadline_name="<str>",
->        deadline_date=date( <input year int>, <input month int>, <input day,),
->    ),
+>       Deadline(
+>           deadline_name="<str>",
+>           deadline_date=date( <input year int>, <input month int>, <input day int>),
+>       ),
 
-where:
+
+
+### where:
 - deadline_name: is the name of the deadline.
 - deadline_date in (YYYY/MM/DD)
 
@@ -49,7 +65,7 @@ This means that the input project strings: "Make   me  a COFFEE" and "make me a 
 >        ),
 
 
-where:
+### where:
 - task_name: is the name of the task. Each task must have a unique name
 - project: Every task belongs to a project ex: "mixing ingredients" is a task of the "cake baking" project
 - start date in (YYYY/MM/DD)
